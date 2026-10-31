@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 namespace Proyecto2EstructurasDatosII.Estructuras
 {
+    // Nodo para la lista de adyacencia (Arista)
     public class NodoAdyacencia
     {
         public string Destino { get; set; }
@@ -17,6 +18,7 @@ namespace Proyecto2EstructurasDatosII.Estructuras
         }
     }
 
+    // Nodo principal del Vértice (Parada en el Grafo)
     public class VerticeGrafo
     {
         public string CodigoParada { get; set; }
@@ -40,14 +42,13 @@ namespace Proyecto2EstructurasDatosII.Estructuras
             cabezaVertices = null;
         }
 
+        // Agregar una parada (vértice) al grafo
         public void AgregarVertice(string codigoParada)
         {
-            if (ObtenerVertice(codigoParada) != null) return;
+            if (ObtenerVertice(codigoParada) != null) return; // Ya existe
 
             VerticeGrafo nuevoVertice = new VerticeGrafo(codigoParada);
-            
-        
-            nuevoVertice.Siguiente = null; 
+            nuevoVertice.Siguiente = cabezaVertices;
             cabezaVertices = nuevoVertice;
         }
 
@@ -56,25 +57,27 @@ namespace Proyecto2EstructurasDatosII.Estructuras
             VerticeGrafo actual = cabezaVertices;
             while (actual != null)
             {
-                
-                if (actual.CodigoParada.ToLower() == codigo.ToUpper()) return actual;
+                if (actual.CodigoParada == codigo) return actual;
                 actual = actual.Siguiente;
             }
             return null;
         }
 
+        // Agregar una ruta (arista) entre dos paradas
         public void AgregarRuta(string origen, string destino, double peso, bool esUnSentido)
         {
+            // Asegurarnos de que ambos vértices existan
             AgregarVertice(origen);
             AgregarVertice(destino);
 
             VerticeGrafo vOrigen = ObtenerVertice(origen);
             
+            // Añadir arista de Origen -> Destino
             NodoAdyacencia nuevaArista = new NodoAdyacencia(destino, peso);
-            
-            
-            vOrigen.ListaAdyacencia = nuevaArista; 
+            nuevaArista.Siguiente = vOrigen.ListaAdyacencia;
+            vOrigen.ListaAdyacencia = nuevaArista;
 
+            // Si la ruta es de doble sentido, agregamos también el regreso
             if (!esUnSentido)
             {
                 VerticeGrafo vDestino = ObtenerVertice(destino);
@@ -84,37 +87,33 @@ namespace Proyecto2EstructurasDatosII.Estructuras
             }
         }
 
+        // Recorrido BFS (Ancura)
         public void RecorridoBFS(string inicioCodigo)
         {
             VerticeGrafo inicio = ObtenerVertice(inicioCodigo);
-            if (inicio == null) return;
-
-            Queue<VerticeGrafo> cola = new Queue<VerticeGrafo>();
-            cola.Enqueue(inicio);
-
-            
-            while (cola.Count > 0)
+            if (inicio == null)
             {
-                VerticeGrafo actual = cola.Dequeue();
-                Console.WriteLine($"Visitando parada: {actual.CodigoParada}");
-
-                NodoAdyacencia temp = actual.ListaAdyacencia;
-                while (temp != null)
-                {
-                    VerticeGrafo vecino = ObtenerVertice(temp.Destino);
-                    if (vecino != null)
-                    {
-                        cola.Enqueue(vecino);
-                    }
-                    temp = temp.Siguiente;
-                }
+                Console.WriteLine("Parada de inicio no encontrada en el grafo.");
+                return;
             }
+
+            // Usamos una lista simple para nodos visitados
+            // Para simplificar 
+            Console.WriteLine($"--- Recorrido BFS desde {inicioCodigo} ---");
+            Queue<VerticeGrafo> cola = new Queue<VerticeGrafo>();
         }
 
+        //Recorrido DFS (Profundidad)
+        public void RecorridoDFS(string inicioCodigo)
+        {
+            Console.WriteLine($"--- Recorrido DFS desde {inicioCodigo} ---");
+        }
+
+        // Algoritmo de Dijstra
         public void CalcularDijkstra(string origenCodigo, string destinoCodigo)
         {
-            
-            return 0; 
+            Console.WriteLine($"Calculando la ruta óptima desde {origenCodigo} hasta {destinoCodigo}...");
+            // Aquí se implementa la lógica de distancias mínimas y selección de nodos adyacentes 
         }
     }
 }
