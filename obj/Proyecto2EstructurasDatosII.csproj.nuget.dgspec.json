@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj": {}
+    "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\SistemaRegistrodeEventos\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj": {
+    "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\SistemaRegistrodeEventos\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj",
+        "projectUniqueName": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\SistemaRegistrodeEventos\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj",
         "projectName": "Proyecto2EstructurasDatosII",
-        "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj",
-        "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\obj\\",
+        "projectPath": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\SistemaRegistrodeEventos\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII.csproj",
+        "packagesPath": "C:\\Users\\DELL\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\DELL\\OneDrive\\Documentos\\GitHub\\SistemaRegistrodeEventos\\Proyecto2EstructurasDatosII\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config"
+          "C:\\Users\\DELL\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
