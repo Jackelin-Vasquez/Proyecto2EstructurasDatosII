@@ -4,17 +4,29 @@ namespace Proyecto2EstructurasDatosII.Models
 {
     public class Ruta
     {
-        public string CodigoOrigen { get; set; }
-        public string CodigoDestino { get; set; }
-        public double Peso { get; set; } // Tiempo en minutos/costo
-        public bool EsUnSentido { get; set; } // True si solo opera en una dirección
+        public string Origen { get; set; }
+        public string Destino { get; set; }
+        public double Tiempo { get; set; }
+        public double Costo { get; set; }
+        public bool EsBidireccional { get; set; }
 
-        public Ruta(string codigoOrigen, string codigoDestino, double peso, bool esUnSentido)
+        public Ruta(string origen, string destino, double tiempo,
+                    double costo, bool esBidireccional)
         {
-            CodigoOrigen = codigoOrigen;
-            CodigoDestino = codigoDestino;
-            Peso = peso;
-            EsUnSentido = esUnSentido;
+            Origen = origen;
+            Destino = destino;
+            Tiempo = tiempo;
+            Costo = costo;
+            EsBidireccional = esBidireccional;
+        }
+
+        public override string ToString()
+        {
+            string sentido = EsBidireccional ? "Bidireccional" : "Un solo sentido";
+            return Origen + " -> " + Destino +
+                   " | Tiempo: " + Tiempo +
+                   " | Costo: Q" + Costo +
+                   " | " + sentido;
         }
     }
 }
