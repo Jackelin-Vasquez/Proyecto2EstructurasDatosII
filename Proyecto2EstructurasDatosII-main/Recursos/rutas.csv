@@ -1,0 +1,15 @@
+origen,destino,tiempo,costo,bidireccional
+P01,P04,6,2.00,true
+P01,P06,5,2.00,true
+P01,P05,8,2.50,true
+P04,P02,7,2.50,true
+P04,P07,9,3.00,true
+P06,P03,10,3.00,true
+P05,P03,9,3.00,true
+P06,P08,12,3.50,true
+P07,P08,11,3.50,false
+P08,P03,8,2.50,false
+P02,P09,9,3.00,true
+P05,P09,12,3.50,true
+P10,P11,4,1.50,true
+P12,P13,5,2.00,true
