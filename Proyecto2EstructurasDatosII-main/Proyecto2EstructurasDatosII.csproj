@@ -8,6 +8,8 @@
     <Nullable>disable</Nullable>
     <RootNamespace>Proyecto2EstructurasDatosII</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <!-- Regla del diseñador visual de WinForms; este proyecto crea la interfaz por código. -->
+    <NoWarn>$(NoWarn);WFO1000</NoWarn>
   </PropertyGroup>
 
   <!-- Los CSV de ejemplo viajan junto al ejecutable (carpeta Recursos). -->
