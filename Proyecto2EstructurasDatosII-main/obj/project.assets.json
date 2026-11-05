@@ -8,19 +8,19 @@
     "net10.0-windows": []
   },
   "packageFolders": {
-    "C:\\Users\\Keila Puac\\.nuget\\packages\\": {}
+    "C:\\Users\\Usuario\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Keila Puac\\OneDrive - Universidad Rafael Landivar\\Tareas URL\\Cuarto Semestre\\Estructura de Datos II\\Proyecto Final\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\Proyecto2EstructurasDatosII.csproj",
+      "projectUniqueName": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\Proyecto2EstructurasDatosII.csproj",
       "projectName": "Proyecto2EstructurasDatosII",
-      "projectPath": "C:\\Users\\Keila Puac\\OneDrive - Universidad Rafael Landivar\\Tareas URL\\Cuarto Semestre\\Estructura de Datos II\\Proyecto Final\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\Proyecto2EstructurasDatosII.csproj",
-      "packagesPath": "C:\\Users\\Keila Puac\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Keila Puac\\OneDrive - Universidad Rafael Landivar\\Tareas URL\\Cuarto Semestre\\Estructura de Datos II\\Proyecto Final\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\obj\\",
+      "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\Proyecto2EstructurasDatosII.csproj",
+      "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Proyecto2EstructurasDatosII\\Proyecto2EstructurasDatosII-main\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Keila Puac\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net10.0-windows"
