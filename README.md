@@ -1,4 +1,4 @@
-```markdown
+
 # Red de Transporte Urbano — Proyecto de Laboratorio No. 2
 
 **Curso:** Estructura de Datos II · Ing. Manuel Gustavo Rojas  
