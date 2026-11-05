@@ -16,3 +16,21 @@ C:\Users\Keila Puac\OneDrive - Universidad Rafael Landivar\Tareas URL\Cuarto Sem
 C:\Users\Keila Puac\OneDrive - Universidad Rafael Landivar\Tareas URL\Cuarto Semestre\Estructura de Datos II\Proyecto Final\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.pdb
 C:\Users\Keila Puac\OneDrive - Universidad Rafael Landivar\Tareas URL\Cuarto Semestre\Estructura de Datos II\Proyecto Final\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.genruntimeconfig.cache
 C:\Users\Keila Puac\OneDrive - Universidad Rafael Landivar\Tareas URL\Cuarto Semestre\Estructura de Datos II\Proyecto Final\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\ref\Proyecto2EstructurasDatosII.dll
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Recursos\paradas.csv
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Recursos\rutas.csv
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Recursos\paradas copy.csv
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Proyecto2EstructurasDatosII.exe
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Proyecto2EstructurasDatosII.deps.json
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Proyecto2EstructurasDatosII.runtimeconfig.json
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Proyecto2EstructurasDatosII.dll
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\bin\Debug\net10.0-windows\Proyecto2EstructurasDatosII.pdb
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.AssemblyInfoInputs.cache
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.AssemblyInfo.cs
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.csproj.CoreCompileInputs.cache
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.sourcelink.json
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.dll
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\refint\Proyecto2EstructurasDatosII.dll
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.pdb
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\Proyecto2EstructurasDatosII.genruntimeconfig.cache
+C:\Users\Usuario\Documents\GitHub\Proyecto2EstructurasDatosII\Proyecto2EstructurasDatosII-main\obj\Debug\net10.0-windows\ref\Proyecto2EstructurasDatosII.dll
