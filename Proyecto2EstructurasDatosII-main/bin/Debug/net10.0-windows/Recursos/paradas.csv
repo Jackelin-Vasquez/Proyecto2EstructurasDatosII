@@ -1,14 +1,31 @@
 codigo,nombre,latitud,longitud
-P01,Parque Central,14.8447,-91.5190
-P02,Terminal Minerva,14.8501,-91.5251
-P03,CUNOC,14.8390,-91.5071
-P04,Mercado La Democracia,14.8421,-91.5240
-P05,Hospital Rodolfo Robles,14.8475,-91.5127
-P06,Parque Benito Juárez,14.8399,-91.5142
-P07,Estadio Mario Camposeco,14.8349,-91.5239
-P08,Centro Comercial Pradera,14.8317,-91.5118
-P09,Cementerio General,14.8560,-91.5200
-P10,Almolonga Centro,14.8085,-91.5185
-P11,Mercado de Almolonga,14.8070,-91.5170
-P12,Salcajá Centro,14.8730,-91.4580
+P01,Parque Central,14.8347,-91.5180
+P02,Terminal Minerva,14.8433,-91.5283
+P03,CUNOC,14.8402,-91.5236
+P04,Mercado La Democracia,14.8376,-91.5222
+P05,Hospital Rodolfo Robles,14.8386,-91.5148
+P06,Parque Benito Juárez,14.8368,-91.5128
+P07,Estadio Mario Camposeco,14.8293,-91.5262
+P08,Centro Comercial Pradera,14.8236,-91.5105
+P09,Cementerio General,14.8398,-91.5195
+P10,Almolonga Centro,14.8130,-91.4838
+P11,Mercado de Almolonga,14.8122,-91.4850
+P12,Salcajá Centro,14.8715,-91.4566
 P13,Parque Salcajá,14.8722,-91.4560
+P14,Parque San Sebastián,14.8330,-91.5150
+P15,Iglesia San Nicolás,14.8385,-91.5165
+P16,Mercado Sur,14.8280,-91.5200
+P17,Parque Rafael Álvarez Ovalle,14.8325,-91.5160
+P18,Instituto Normal de Occidente,14.8410,-91.5160
+P19,Estación de Bomberos,14.8305,-91.5215
+P20,Zona Militar,14.8460,-91.5200
+P21,Parque Industrial,14.8500,-91.5180
+P22,Colonia El Cenizal,14.8230,-91.5230
+P23,Centro de Salud Zona 5,14.8320,-91.5300
+P24,Plaza Interplaza,14.8490,-91.5260
+P25,Baños de Almolonga,14.8080,-91.4800
+P26,Iglesia de Almolonga,14.8136,-91.4826
+P27,Iglesia San Jacinto,14.8700,-91.4585
+P28,Cantel Centro,14.8113,-91.4609
+P29,Fábrica de Cantel,14.8140,-91.4560
+P30,Parque de Cantel,14.8090,-91.4630

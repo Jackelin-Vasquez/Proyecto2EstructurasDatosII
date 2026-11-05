@@ -25,6 +25,21 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         private int hover = -1, seleccion = -1, arrastrando = -1;
         private bool huboArrastre;
 
+        // El grafo no conoce coordenadas: la ventana de alta propone el centro de la red.
+        public event Action AgregarSolicitado;
+        public event Action<Parada> EliminarSolicitado;
+        public event Action<Parada> ParadaElegida;
+
+        // Parada marcada actualmente (o null).
+        public Parada Marcada { get { return seleccion >= 0 && seleccion < paradas.Length ? paradas[seleccion] : null; } }
+
+        // Marca un nodo por su código (p. ej. el recién creado).
+        public void Marcar(string codigo)
+        {
+            seleccion = codigo == null ? -1 : IndiceDe(codigo);
+            Invalidate();
+        }
+
         private const float Radio = 18f;
         private const float PadX = 84f, PadArriba = 46f, PadAbajo = 52f;
 
@@ -289,6 +304,34 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             int i = NodoEn(e.Location);
             seleccion = i;          // clic en el fondo = quitar selección
             Invalidate();
+            if (e.Button == MouseButtons.Right) { MostrarMenu(e.Location, i); return; }
+            if (i >= 0 && ParadaElegida != null) ParadaElegida(paradas[i]);
+        }
+
+        private void MostrarMenu(Point lugar, int i)
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
+            menu.Font = Tema.Fuente(9.5f);
+            if (i >= 0)
+            {
+                Parada p = paradas[i];
+                ToolStripMenuItem cab = new ToolStripMenuItem(p.Codigo + " · " + p.Nombre);
+                cab.Enabled = false;
+                menu.Items.Add(cab);
+                menu.Items.Add(new ToolStripSeparator());
+                ToolStripMenuItem el = new ToolStripMenuItem("Eliminar esta parada…");
+                el.ForeColor = Tema.Peligro;
+                el.Click += delegate { if (EliminarSolicitado != null) EliminarSolicitado(p); };
+                menu.Items.Add(el);
+            }
+            else
+            {
+                ToolStripMenuItem ag = new ToolStripMenuItem("Agregar parada…");
+                ag.Click += delegate { if (AgregarSolicitado != null) AgregarSolicitado(); };
+                menu.Items.Add(ag);
+            }
+            menu.Closed += delegate { BeginInvoke(new Action(menu.Dispose)); };
+            menu.Show(this, lugar);
         }
 
         protected override void OnMouseDoubleClick(MouseEventArgs e)

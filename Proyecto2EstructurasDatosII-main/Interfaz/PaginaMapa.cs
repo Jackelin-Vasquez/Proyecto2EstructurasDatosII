@@ -9,7 +9,8 @@ namespace Proyecto2EstructurasDatosII.Interfaz
     {
         private readonly TarjetaDato dParadas, dRutas, dZonas, dTrie;
         private readonly MapaControl mapa;
-        private readonly CheckBox chkZonas, chkTiempos;
+        private readonly CheckBox chkZonas, chkTiempos, chkReal;
+        private readonly Button btnAgregar, btnEliminar;
 
         public PaginaMapa(Contexto ctx)
             : base(ctx, "Mapa de la red", "Vista general de las paradas, rutas y zonas conectadas de la ciudad.")
@@ -62,7 +63,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             chkZonas.Margin = new Padding(0, 4, 0, 0);
             chkZonas.CheckedChanged += delegate { mapa.ColorearZonas = chkZonas.Checked; mapa.Invalidate(); };
 
-            CheckBox chkReal = new CheckBox();
+            chkReal = new CheckBox();
             chkReal.Text = "Mapa real";
             chkReal.Checked = true;
             chkReal.AutoSize = true;
@@ -71,6 +72,23 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             chkReal.Margin = new Padding(0, 4, 16, 0);
             chkReal.CheckedChanged += delegate { mapa.MapaReal = chkReal.Checked; mapa.AjustarVista(); };
 
+            btnAgregar = Tema.Boton("＋ Agregar parada", true);
+            btnAgregar.Size = new Size(150, 32);
+            btnAgregar.Margin = new Padding(0, 0, 8, 0);
+            btnAgregar.Click += delegate
+            {
+                if (!chkReal.Checked) chkReal.Checked = true;   // para ubicar con un clic hace falta el mapa real
+                mapa.ModoAgregar = !mapa.ModoAgregar;
+            };
+
+            btnEliminar = Tema.BotonPeligro("Eliminar seleccionada");
+            btnEliminar.Size = new Size(170, 32);
+            btnEliminar.Margin = new Padding(0, 0, 16, 0);
+            btnEliminar.Enabled = false;
+            btnEliminar.Click += delegate { EliminarMarcada(); };
+
+            tarjeta.Acciones.Controls.Add(btnAgregar);
+            tarjeta.Acciones.Controls.Add(btnEliminar);
             tarjeta.Acciones.Controls.Add(chkReal);
             tarjeta.Acciones.Controls.Add(chkTiempos);
             tarjeta.Acciones.Controls.Add(chkZonas);
@@ -81,12 +99,34 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             mapa.ParadaSeleccionada += delegate (Proyecto2EstructurasDatosII.Models.Parada p)
             {
                 ctx.Avisar("Parada seleccionada: " + p, TipoMensaje.Info);
+                btnEliminar.Enabled = true;
+            };
+            mapa.UbicacionElegida += delegate (double lat, double lon)
+            {
+                // La parada queda exactamente en el punto donde se hizo clic en el mapa real.
+                Proyecto2EstructurasDatosII.Models.Parada nueva = GestorParadas.Agregar(Ctx, FindForm(), lat, lon);
+                if (nueva != null) { mapa.ParadaMarcada = nueva.Codigo; btnEliminar.Enabled = true; }
+            };
+            mapa.EliminarSolicitado += delegate (Proyecto2EstructurasDatosII.Models.Parada p)
+            {
+                GestorParadas.Eliminar(Ctx, FindForm(), p);
+            };
+            mapa.ModoAgregarCambiado += delegate
+            {
+                btnAgregar.Text = mapa.ModoAgregar ? "Cancelar (Esc)" : "＋ Agregar parada";
             };
             tarjeta.Contenido.Controls.Add(mapa);
 
             raiz.Controls.Add(fila, 0, 0);
             raiz.Controls.Add(tarjeta, 0, 2);
             Cuerpo.Controls.Add(raiz);
+        }
+
+        private void EliminarMarcada()
+        {
+            Proyecto2EstructurasDatosII.Models.Parada p = mapa.ParadaMarcada == null ? null : Ctx.Red.Localizar(mapa.ParadaMarcada);
+            if (p == null) { btnEliminar.Enabled = false; return; }
+            GestorParadas.Eliminar(Ctx, FindForm(), p);
         }
 
         public override void Actualizar()
@@ -101,6 +141,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             dTrie.Establecer(red.TrieNombres.ContarNodos().ToString(),
                 red.TrieNombres.Cantidad + " nombres indexados para autocompletar");
             mapa.Recargar();
+            btnEliminar.Enabled = mapa.ParadaMarcada != null && Ctx.Red.Localizar(mapa.ParadaMarcada) != null;
         }
     }
 }

@@ -55,6 +55,28 @@ namespace Proyecto2EstructurasDatosII.Interfaz
 
         public event Action<Parada> ParadaSeleccionada;
 
+        // Alta y baja de paradas directamente sobre el mapa.
+        public event Action<double, double> UbicacionElegida;   // latitud, longitud del clic
+        public event Action<Parada> EliminarSolicitado;
+        public event Action ModoAgregarCambiado;
+
+        private bool modoAgregar;
+
+        // true: el siguiente clic sobre el mapa elige dónde va la nueva parada.
+        public bool ModoAgregar
+        {
+            get { return modoAgregar; }
+            set
+            {
+                if (value == modoAgregar) return;
+                modoAgregar = value;
+                Cursor = value ? Cursors.Cross : Cursors.Default;
+                if (value) Focus();
+                Invalidate();
+                if (ModoAgregarCambiado != null) ModoAgregarCambiado();
+            }
+        }
+
         public MapaControl()
         {
             DoubleBuffered = true;
@@ -67,6 +89,8 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             MostrarEtiquetasRutas = true;
             MostrarLeyenda = true;
             MapaReal = true;
+            SetStyle(ControlStyles.Selectable, true);
+            TabStop = true;
             MosaicosMapa.Actualizado += AlLlegarMosaico;
         }
 
@@ -139,7 +163,10 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             int anterior = paradas.Length;
             paradas = red.ParadasOrdenadas();
             aristas = red.Grafo.ObtenerAristas();
-            if (paradas.Length != anterior) { zoom = 1f; desplazamiento = PointF.Empty; vistaManual = false; }
+            // La vista solo se reencuadra en cargas grandes; agregar o quitar una parada no la mueve.
+            if (anterior == 0 || Math.Abs(paradas.Length - anterior) > 1)
+            { zoom = 1f; desplazamiento = PointF.Empty; vistaManual = false; }
+            if (seleccionada != null && red.Localizar(seleccionada) == null) seleccionada = null;
 
             Zona[] zonas = red.ObtenerZonas();
             zonaDe = new int[paradas.Length];
@@ -305,7 +332,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         {
             base.OnMouseUp(e);
             arrastrando = false;
-            if (Cursor == Cursors.SizeAll) Cursor = Cursors.Default;
+            if (Cursor == Cursors.SizeAll) Cursor = modoAgregar ? Cursors.Cross : Cursors.Default;
         }
 
         protected override void OnMouseWheel(MouseEventArgs e)
@@ -351,6 +378,8 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         {
             base.OnMouseMove(e);
 
+            if (modoAgregar) { cursor = e.Location; Invalidate(); }
+
             if (arrastrando)
             {
                 int dx = e.X - origenArrastre.X, dy = e.Y - origenArrastre.Y;
@@ -377,7 +406,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             if (cambio)
             {
                 hover = h;
-                Cursor = h >= 0 ? Cursors.Hand : Cursors.Default;
+                Cursor = modoAgregar ? Cursors.Cross : (h >= 0 ? Cursors.Hand : Cursors.Default);
             }
             if (cambio || h >= 0) Invalidate();
         }
@@ -393,6 +422,20 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         {
             base.OnMouseClick(e);
             if (huboArrastre) { huboArrastre = false; return; }
+
+            if (e.Button == MouseButtons.Right) { MostrarMenu(e.Location); return; }
+            if (e.Button != MouseButtons.Left) return;
+
+            if (modoAgregar && MapaRealActivo)
+            {
+                double lat, lon;
+                LatLonEn(e.Location, out lat, out lon);
+                vistaManual = true;               // la vista se queda donde el usuario la dejó
+                ModoAgregar = false;
+                if (UbicacionElegida != null) UbicacionElegida(lat, lon);
+                return;
+            }
+
             int i = ParadaEn(e.Location);
             if (i >= 0)
             {
@@ -400,6 +443,88 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                 Invalidate();
                 if (ParadaSeleccionada != null) ParadaSeleccionada(paradas[i]);
             }
+        }
+
+        protected override bool IsInputKey(Keys keyData)
+        {
+            return keyData == Keys.Escape || base.IsInputKey(keyData);
+        }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+            if (e.KeyCode == Keys.Escape && modoAgregar) ModoAgregar = false;
+        }
+
+        // Latitud y longitud del punto de pantalla p (inversa de la proyección Web Mercator).
+        private void LatLonEn(Point p, out double lat, out double lon)
+        {
+            double s = EscalaMundo;
+            double wx = centroX + (p.X - Width / 2.0) / s;
+            double wy = centroY + (p.Y - Height / 2.0) / s;
+            lon = wx * 360.0 - 180.0;
+            lat = Math.Atan(Math.Sinh(Math.PI * (1.0 - 2.0 * wy))) * 180.0 / Math.PI;
+        }
+
+        // Menú de clic derecho: agregar una parada aquí, o eliminar la parada bajo el cursor.
+        private void MostrarMenu(Point lugar)
+        {
+            ContextMenuStrip menu = new ContextMenuStrip();
+            menu.Font = Tema.Fuente(9.5f);
+            int i = ParadaEn(lugar);
+
+            if (i >= 0 && EliminarSolicitado == null) { menu.Dispose(); return; }   // este mapa es solo de consulta
+            if (i >= 0)
+            {
+                Parada p = paradas[i];
+                seleccionada = p.Codigo;
+                Invalidate();
+
+                ToolStripMenuItem cab = new ToolStripMenuItem(p.Codigo + " · " + p.Nombre);
+                cab.Enabled = false;
+                menu.Items.Add(cab);
+                menu.Items.Add(new ToolStripSeparator());
+
+                ToolStripMenuItem eliminar = new ToolStripMenuItem("Eliminar esta parada…");
+                eliminar.ForeColor = Tema.Peligro;
+                eliminar.Click += delegate
+                {
+                    vistaManual = true;
+                    if (EliminarSolicitado != null) EliminarSolicitado(p);
+                };
+                menu.Items.Add(eliminar);
+            }
+            else if (UbicacionElegida != null)
+            {
+                if (MapaRealActivo)
+                {
+                    double lat, lon;
+                    LatLonEn(lugar, out lat, out lon);
+                    ToolStripMenuItem agregar = new ToolStripMenuItem("Agregar parada aquí…");
+                    agregar.Click += delegate
+                    {
+                        vistaManual = true;
+                        UbicacionElegida(lat, lon);
+                    };
+                    menu.Items.Add(agregar);
+
+                    ToolStripMenuItem coord = new ToolStripMenuItem(
+                        lat.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + ", " +
+                        lon.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture));
+                    coord.Enabled = false;
+                    menu.Items.Add(coord);
+                }
+                else
+                {
+                    ToolStripMenuItem aviso = new ToolStripMenuItem("Active «Mapa real» para ubicar paradas con un clic");
+                    aviso.Enabled = false;
+                    menu.Items.Add(aviso);
+                }
+            }
+
+            if (menu.Items.Count == 0) { menu.Dispose(); return; }
+            menu.Closed += delegate { BeginInvoke(new Action(menu.Dispose)); };
+            menu.Show(this, lugar);
         }
 
         // ---------------------------------------------------------------
@@ -467,7 +592,8 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             DibujarParadas(g);
             if (ColorearZonas && MostrarLeyenda) DibujarLeyenda(g);
             DibujarAyuda(g);
-            DibujarHover(g);
+            if (modoAgregar) DibujarModoAgregar(g);
+            else DibujarHover(g);
         }
 
         private void DibujarCuadricula(Graphics g)
@@ -722,6 +848,45 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                     g.FillRectangle(fondo, 10, 10, sz.Width + 14, sz.Height + 8);
                     g.DrawString(aviso, f, txt, 17, 14);
                 }
+            }
+        }
+
+        // Marcador «fantasma» y coordenadas bajo el cursor mientras se elige dónde va la parada nueva.
+        private void DibujarModoAgregar(Graphics g)
+        {
+            string aviso = "Haga clic en el mapa para ubicar la nueva parada   ·   Esc: cancelar";
+            using (Font f = Tema.FuenteNegrita(9f))
+            using (Brush fondo = new SolidBrush(Tema.Lateral))
+            {
+                SizeF sz = g.MeasureString(aviso, f);
+                float x = (Width - sz.Width) / 2 - 12, y = 12;
+                g.FillRectangle(fondo, x, y, sz.Width + 24, sz.Height + 12);
+                g.DrawString(aviso, f, Brushes.White, x + 12, y + 6);
+            }
+
+            if (!MapaRealActivo || !ClientRectangle.Contains(cursor)) return;
+
+            using (Pen anillo = new Pen(Color.FromArgb(150, Tema.Primario), 2f))
+            using (Brush relleno = new SolidBrush(Color.FromArgb(120, Tema.Primario)))
+            {
+                anillo.DashStyle = DashStyle.Dash;
+                g.FillEllipse(relleno, cursor.X - 9, cursor.Y - 9, 18, 18);
+                g.DrawEllipse(anillo, cursor.X - 15, cursor.Y - 15, 30, 30);
+            }
+
+            double lat, lon;
+            LatLonEn(cursor, out lat, out lon);
+            string coord = lat.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture) + ", " +
+                           lon.ToString("0.0000", System.Globalization.CultureInfo.InvariantCulture);
+            using (Font f = Tema.Fuente(8.5f))
+            using (Brush fondo = new SolidBrush(Color.FromArgb(235, 255, 255, 255)))
+            using (Brush txt = new SolidBrush(Tema.Texto))
+            {
+                SizeF sz = g.MeasureString(coord, f);
+                float x = cursor.X + 20, y = cursor.Y + 14;
+                if (x + sz.Width + 8 > Width) x = cursor.X - sz.Width - 28;
+                g.FillRectangle(fondo, x, y, sz.Width + 8, sz.Height + 2);
+                g.DrawString(coord, f, txt, x + 4, y + 1);
             }
         }
 

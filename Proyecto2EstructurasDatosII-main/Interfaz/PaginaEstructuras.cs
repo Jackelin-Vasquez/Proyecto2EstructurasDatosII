@@ -436,6 +436,31 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                 grafoDibujo.Visible = !chkLista.Checked;
                 tarjeta.Titulo = chkLista.Checked ? "Lista de adyacencia (un vértice por línea)" : "Dibujo del grafo";
             };
+            Button btnAgregar = Tema.Boton("＋ Agregar parada", true);
+            btnAgregar.Size = new Size(150, 32);
+            btnAgregar.Margin = new Padding(0, 0, 8, 0);
+            Button btnEliminar = Tema.BotonPeligro("Eliminar seleccionada");
+            btnEliminar.Size = new Size(170, 32);
+            btnEliminar.Margin = new Padding(0, 0, 16, 0);
+            btnEliminar.Enabled = false;
+
+            Action agregar = delegate
+            {
+                double lat, lon;
+                GestorParadas.CentroDeLaRed(Ctx.Red, out lat, out lon);
+                Models.Parada nueva = GestorParadas.Agregar(Ctx, FindForm(), lat, lon);
+                if (nueva != null) { grafoDibujo.Marcar(nueva.Codigo); btnEliminar.Enabled = true; }
+            };
+            Action<Models.Parada> eliminar = delegate (Models.Parada p) { GestorParadas.Eliminar(Ctx, FindForm(), p); };
+
+            btnAgregar.Click += delegate { agregar(); };
+            btnEliminar.Click += delegate { if (grafoDibujo.Marcada != null) eliminar(grafoDibujo.Marcada); };
+            grafoDibujo.AgregarSolicitado += agregar;
+            grafoDibujo.EliminarSolicitado += eliminar;
+            grafoDibujo.ParadaElegida += delegate { btnEliminar.Enabled = true; };
+
+            tarjeta.Acciones.Controls.Add(btnAgregar);
+            tarjeta.Acciones.Controls.Add(btnEliminar);
             tarjeta.Acciones.Controls.Add(chkLista);
 
             tarjeta.Contenido.Controls.Add(grafoLista);
