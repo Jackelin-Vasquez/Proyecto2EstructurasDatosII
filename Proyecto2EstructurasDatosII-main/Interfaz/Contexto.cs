@@ -14,11 +14,11 @@ namespace Proyecto2EstructurasDatosII.Interfaz
     // Reemplace los textos entre corchetes por los nombres reales del grupo.
     public static class Responsables
     {
-        public const string TablaHash = "Morelia";
-        public const string Grafo = "[Nombre del integrante]";
-        public const string UnionFind = "[Nombre del integrante]";
-        public const string Trie = "[Nombre del integrante]";
-        public const string Modelos = "Morelia / Jackelin Vásquez";
+        public const string TablaHash = "--------------------------";
+        public const string Grafo = "--------------------------";
+        public const string UnionFind = "--------------------------";
+        public const string Trie = "--------------------------";
+        public const string Modelos = "--------------------------";
     }
 
     // Estado compartido por todas las páginas: la red y los avisos de cambio.
