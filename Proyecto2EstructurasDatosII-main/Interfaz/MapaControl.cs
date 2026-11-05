@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Threading;
 using System.Windows.Forms;
 using Proyecto2EstructurasDatosII.Estructuras;
 using Proyecto2EstructurasDatosII.Models;
@@ -29,6 +30,20 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         private PointF desplazamientoInicial;
         private const float ZoomMin = 1f, ZoomMax = 14f;
 
+        // Mapa real (Web Mercator): coordenadas «mundo» 0..1, centro de la vista y nivel de zoom.
+        private struct PuntoD { public double X, Y; }
+        private PuntoD[] mundo = new PuntoD[0];
+        private double centroX = 0.5, centroY = 0.5;
+        private double zoomMapa = 12;
+        private bool vistaManual;
+        private double centroInicialX, centroInicialY;
+        private int refrescoPendiente;
+        private const double ZoomRealMin = 3, ZoomRealMax = 19;
+
+        // true: mosaicos de OpenStreetMap como fondo (necesita Internet la primera vez).
+        // false: mapa esquemático simple.
+        public bool MapaReal { get; set; }
+
         // Estado visual configurable
         private string[] camino = new string[0];
         private string[] orden = new string[0];
@@ -51,7 +66,36 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             ColorearZonas = true;
             MostrarEtiquetasRutas = true;
             MostrarLeyenda = true;
+            MapaReal = true;
+            MosaicosMapa.Actualizado += AlLlegarMosaico;
         }
+
+        private void AlLlegarMosaico()
+        {
+            // Varias descargas pueden terminar casi a la vez: se agrupan en un solo repintado.
+            if (Interlocked.Exchange(ref refrescoPendiente, 1) == 1) return;
+            try
+            {
+                if (IsHandleCreated && !IsDisposed)
+                    BeginInvoke(new Action(delegate
+                    {
+                        Interlocked.Exchange(ref refrescoPendiente, 0);
+                        Invalidate();
+                    }));
+                else Interlocked.Exchange(ref refrescoPendiente, 0);
+            }
+            catch { Interlocked.Exchange(ref refrescoPendiente, 0); }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) MosaicosMapa.Actualizado -= AlLlegarMosaico;
+            base.Dispose(disposing);
+        }
+
+        private bool MapaRealActivo { get { return MapaReal && paradas.Length > 0; } }
+
+        private double EscalaMundo { get { return 256.0 * Math.Pow(2, zoomMapa); } }
 
         public void Enlazar(RedTransporte r)
         {
@@ -95,7 +139,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             int anterior = paradas.Length;
             paradas = red.ParadasOrdenadas();
             aristas = red.Grafo.ObtenerAristas();
-            if (paradas.Length != anterior) { zoom = 1f; desplazamiento = PointF.Empty; }
+            if (paradas.Length != anterior) { zoom = 1f; desplazamiento = PointF.Empty; vistaManual = false; }
 
             Zona[] zonas = red.ObtenerZonas();
             zonaDe = new int[paradas.Length];
@@ -119,12 +163,61 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             return new PointF(b.X * zoom + desplazamiento.X, b.Y * zoom + desplazamiento.Y);
         }
 
+        // Posición en pantalla de la parada i, según el modo (mapa real o esquema).
+        private PointF Pantalla(int i)
+        {
+            if (MapaRealActivo && i < mundo.Length)
+            {
+                double s = EscalaMundo;
+                return new PointF((float)((mundo[i].X - centroX) * s + Width / 2.0),
+                                  (float)((mundo[i].Y - centroY) * s + Height / 2.0));
+            }
+            return Transformar(posiciones[i]);
+        }
+
         // Vuelve a encuadrar toda la red.
         public void AjustarVista()
         {
             zoom = 1f;
             desplazamiento = PointF.Empty;
+            vistaManual = false;
+            AjustarReal();
             Invalidate();
+        }
+
+        // Elige centro y zoom para que quepan todas las paradas.
+        private void AjustarReal()
+        {
+            if (mundo.Length == 0 || Width <= 0 || Height <= 0) return;
+
+            double minX = mundo[0].X, maxX = mundo[0].X, minY = mundo[0].Y, maxY = mundo[0].Y;
+            for (int i = 1; i < mundo.Length; i++)
+            {
+                if (mundo[i].X < minX) minX = mundo[i].X;
+                if (mundo[i].X > maxX) maxX = mundo[i].X;
+                if (mundo[i].Y < minY) minY = mundo[i].Y;
+                if (mundo[i].Y > maxY) maxY = mundo[i].Y;
+            }
+
+            double ancho = Math.Max(Width - 2 * Margen, 50);
+            double alto = Math.Max(Height - 2 * Margen, 50);
+            double zx = (maxX - minX) > 1e-12 ? ancho / ((maxX - minX) * 256.0) : 1e9;
+            double zy = (maxY - minY) > 1e-12 ? alto / ((maxY - minY) * 256.0) : 1e9;
+            double z = Math.Log(Math.Min(zx, zy), 2);
+            zoomMapa = Math.Max(ZoomRealMin, Math.Min(16, z));
+            centroX = (minX + maxX) / 2;
+            centroY = (minY + maxY) / 2;
+        }
+
+        // Latitud/longitud -> coordenadas «mundo» de Web Mercator (0..1).
+        private static PuntoD Mercator(double lat, double lon)
+        {
+            lat = Math.Max(-85.0511, Math.Min(85.0511, lat));
+            double rad = lat * Math.PI / 180.0;
+            PuntoD p;
+            p.X = (lon + 180.0) / 360.0;
+            p.Y = (1.0 - Math.Log(Math.Tan(rad) + 1.0 / Math.Cos(rad)) / Math.PI) / 2.0;
+            return p;
         }
 
         private int IndiceDe(string codigo)
@@ -139,7 +232,11 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         private void CalcularPosiciones()
         {
             posiciones = new PointF[paradas.Length];
+            mundo = new PuntoD[paradas.Length];
             if (paradas.Length == 0) return;
+
+            for (int i = 0; i < paradas.Length; i++) mundo[i] = Mercator(paradas[i].Latitud, paradas[i].Longitud);
+            if (!vistaManual) AjustarReal();
 
             double minLat = paradas[0].Latitud, maxLat = paradas[0].Latitud;
             double minLon = paradas[0].Longitud, maxLon = paradas[0].Longitud;
@@ -183,7 +280,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         {
             for (int i = paradas.Length - 1; i >= 0; i--)
             {
-                PointF c = Transformar(posiciones[i]);
+                PointF c = Pantalla(i);
                 float dx = c.X - p.X, dy = c.Y - p.Y;
                 if (dx * dx + dy * dy <= 14 * 14) return i;
             }
@@ -199,6 +296,8 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                 huboArrastre = false;
                 origenArrastre = e.Location;
                 desplazamientoInicial = desplazamiento;
+                centroInicialX = centroX;
+                centroInicialY = centroY;
             }
         }
 
@@ -212,6 +311,24 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         protected override void OnMouseWheel(MouseEventArgs e)
         {
             base.OnMouseWheel(e);
+
+            if (MapaRealActivo)
+            {
+                double nz = Math.Max(ZoomRealMin, Math.Min(ZoomRealMax, zoomMapa + (e.Delta > 0 ? 0.5 : -0.5)));
+                if (Math.Abs(nz - zoomMapa) < 0.0001) return;
+
+                // El punto bajo el cursor se mantiene fijo mientras se acerca o aleja.
+                double s0 = EscalaMundo;
+                double wx = centroX + (e.X - Width / 2.0) / s0, wy = centroY + (e.Y - Height / 2.0) / s0;
+                zoomMapa = nz;
+                double s1 = EscalaMundo;
+                centroX = wx - (e.X - Width / 2.0) / s1;
+                centroY = wy - (e.Y - Height / 2.0) / s1;
+                vistaManual = true;
+                Invalidate();
+                return;
+            }
+
             float nuevo = e.Delta > 0 ? zoom * 1.25f : zoom / 1.25f;
             nuevo = Math.Max(ZoomMin, Math.Min(ZoomMax, nuevo));
             if (Math.Abs(nuevo - zoom) < 0.0001f) return;
@@ -241,7 +358,14 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                 {
                     huboArrastre = true;
                     Cursor = Cursors.SizeAll;
-                    desplazamiento = new PointF(desplazamientoInicial.X + dx, desplazamientoInicial.Y + dy);
+                    if (MapaRealActivo)
+                    {
+                        double s = EscalaMundo;
+                        centroX = centroInicialX - dx / s;
+                        centroY = Math.Max(0, Math.Min(1, centroInicialY - dy / s));
+                        vistaManual = true;
+                    }
+                    else desplazamiento = new PointF(desplazamientoInicial.X + dx, desplazamientoInicial.Y + dy);
                     Invalidate();
                 }
                 return;
@@ -285,7 +409,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         private PointF PosDe(string codigo)
         {
             int i = IndiceDe(codigo);
-            return i >= 0 ? Transformar(posiciones[i]) : PointF.Empty;
+            return i >= 0 ? Pantalla(i) : PointF.Empty;
         }
 
         private int PosEnCamino(string codigo)
@@ -322,6 +446,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             g.Clear(BackColor);
 
             DibujarCuadricula(g);
+            if (MapaRealActivo) DibujarMosaicos(g);
 
             if (paradas.Length == 0)
             {
@@ -356,8 +481,10 @@ namespace Proyecto2EstructurasDatosII.Interfaz
 
         private void DibujarRutas(Graphics g)
         {
-            using (Pen linea = new Pen(ColorTranslator.FromHtml("#AAB4C5"), 2f))
-            using (Pen flecha = new Pen(ColorTranslator.FromHtml("#8793A8"), 2f))
+            bool real = MapaRealActivo;
+            using (Pen contorno = new Pen(Color.FromArgb(210, 255, 255, 255), 5.5f))
+            using (Pen linea = new Pen(real ? ColorTranslator.FromHtml("#5E6E8C") : ColorTranslator.FromHtml("#AAB4C5"), 2.2f))
+            using (Pen flecha = new Pen(real ? ColorTranslator.FromHtml("#4B5B79") : ColorTranslator.FromHtml("#8793A8"), 2.2f))
             using (Font f = Tema.Fuente(8f))
             using (Brush txt = new SolidBrush(Tema.TextoSuave))
             using (Brush fondoTxt = new SolidBrush(Color.FromArgb(220, 247, 249, 252)))
@@ -374,11 +501,13 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                     PointF p1 = PosDe(a.Origen), p2 = PosDe(a.Destino);
                     if (doble)
                     {
+                        if (real) g.DrawLine(contorno, p1, p2);
                         g.DrawLine(linea, p1, p2);
                     }
                     else
                     {
                         PointF fin = Acortar(p1, p2, 11);
+                        if (real) g.DrawLine(contorno, p1, fin);
                         g.DrawLine(flecha, p1, fin);
                     }
                 }
@@ -397,12 +526,18 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         private void DibujarCamino(Graphics g)
         {
             if (camino.Length < 2) return;
+            using (Pen halo = new Pen(Color.FromArgb(220, 255, 255, 255), 9f))
             using (Pen p = new Pen(Tema.Primario, 5f))
             {
                 p.StartCap = LineCap.Round;
                 p.EndCap = LineCap.Round;
+                halo.StartCap = LineCap.Round;
+                halo.EndCap = LineCap.Round;
                 for (int i = 0; i + 1 < camino.Length; i++)
+                {
+                    g.DrawLine(halo, PosDe(camino[i]), PosDe(camino[i + 1]));
                     g.DrawLine(p, PosDe(camino[i]), PosDe(camino[i + 1]));
+                }
             }
         }
 
@@ -419,7 +554,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             for (int i = 0; i < n; i++)
             {
                 Parada p = paradas[i];
-                PointF c = Transformar(posiciones[i]);
+                PointF c = Pantalla(i);
                 centros[i] = c;
                 int posCamino = PosEnCamino(p.Codigo);
                 int posOrden = PosEnOrden(p.Codigo);
@@ -535,15 +670,85 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             return false;
         }
 
+        // Dibuja los mosaicos visibles de OpenStreetMap; los que faltan se descargan en segundo plano.
+        private void DibujarMosaicos(Graphics g)
+        {
+            double s = EscalaMundo;
+            int tz = (int)Math.Max(0, Math.Min(19, Math.Round(zoomMapa)));
+            int n = 1 << tz;
+            double tam = s / n;                         // tamaño en pantalla de un mosaico
+
+            double x0 = centroX - Width / 2.0 / s, x1 = centroX + Width / 2.0 / s;
+            double y0 = centroY - Height / 2.0 / s, y1 = centroY + Height / 2.0 / s;
+            int tx0 = (int)Math.Floor(x0 * n), tx1 = (int)Math.Floor(x1 * n);
+            int ty0 = Math.Max(0, (int)Math.Floor(y0 * n)), ty1 = Math.Min(n - 1, (int)Math.Floor(y1 * n));
+            if ((tx1 - tx0 + 1) * (ty1 - ty0 + 1) > 120) return;   // zoom demasiado lejano
+
+            InterpolationMode modo = g.InterpolationMode;
+            PixelOffsetMode offset = g.PixelOffsetMode;
+            g.InterpolationMode = InterpolationMode.HighQualityBilinear;
+            g.PixelOffsetMode = PixelOffsetMode.Half;
+
+            int faltantes = 0;
+            for (int tx = tx0; tx <= tx1; tx++)
+            {
+                for (int ty = ty0; ty <= ty1; ty++)
+                {
+                    float sx = (float)((tx / (double)n - centroX) * s + Width / 2.0);
+                    float sy = (float)((ty / (double)n - centroY) * s + Height / 2.0);
+                    Bitmap b = MosaicosMapa.Obtener(tz, ((tx % n) + n) % n, ty);
+                    if (b == null) { faltantes++; continue; }
+                    g.DrawImage(b, sx, sy, (float)tam + 1f, (float)tam + 1f);
+                }
+            }
+
+            g.InterpolationMode = modo;
+            g.PixelOffsetMode = offset;
+
+            // Velo claro para que las rutas y paradas resalten sobre el mapa.
+            using (Brush velo = new SolidBrush(Color.FromArgb(48, 255, 255, 255)))
+                g.FillRectangle(velo, 0, 0, Width, Height);
+
+            if (faltantes > 0)
+            {
+                string aviso = MosaicosMapa.HayFallosRecientes()
+                    ? "Sin conexión: no se pudo cargar el mapa base (se muestran solo las paradas y rutas)."
+                    : "Cargando mapa…";
+                using (Font f = Tema.Fuente(8.5f))
+                using (Brush fondo = new SolidBrush(Color.FromArgb(235, 255, 255, 255)))
+                using (Brush txt = new SolidBrush(MosaicosMapa.HayFallosRecientes() ? Tema.Alerta : Tema.TextoSuave))
+                {
+                    SizeF sz = g.MeasureString(aviso, f);
+                    g.FillRectangle(fondo, 10, 10, sz.Width + 14, sz.Height + 8);
+                    g.DrawString(aviso, f, txt, 17, 14);
+                }
+            }
+        }
+
         private void DibujarAyuda(Graphics g)
         {
-            string t = zoom > 1.01f ? "Zoom " + zoom.ToString("0.0") + "×  ·  doble clic: ajustar"
-                                    : "Rueda: zoom  ·  arrastre: mover  ·  doble clic: ajustar";
+            bool real = MapaRealActivo;
+            string t = real ? "Rueda: zoom  ·  arrastre: mover  ·  doble clic: ajustar"
+                            : (zoom > 1.01f ? "Zoom " + zoom.ToString("0.0") + "×  ·  doble clic: ajustar"
+                                            : "Rueda: zoom  ·  arrastre: mover  ·  doble clic: ajustar");
             using (Font f = Tema.Fuente(8f))
             using (Brush b = new SolidBrush(Tema.TextoSuave))
+            using (Brush fondo = new SolidBrush(Color.FromArgb(215, 255, 255, 255)))
             {
                 SizeF s = g.MeasureString(t, f);
-                g.DrawString(t, f, b, Width - s.Width - 10, Height - s.Height - 8);
+                float y = Height - s.Height - 8;
+
+                if (real)
+                {
+                    // La atribución a OpenStreetMap es obligatoria por su licencia.
+                    SizeF sa = g.MeasureString(MosaicosMapa.Atribucion, f);
+                    g.FillRectangle(fondo, Width - sa.Width - 12, Height - sa.Height - 5, sa.Width + 12, sa.Height + 5);
+                    g.DrawString(MosaicosMapa.Atribucion, f, b, Width - sa.Width - 6, Height - sa.Height - 3);
+                    y -= sa.Height + 2;
+                }
+
+                g.FillRectangle(fondo, Width - s.Width - 14, y - 1, s.Width + 14, s.Height + 2);
+                g.DrawString(t, f, b, Width - s.Width - 8, y);
             }
         }
 
@@ -573,7 +778,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
                     RectangleF zona = RectangleF.Inflate(esquinas[k], 24, 24);
                     int tapadas = 0;
                     for (int i = 0; i < posiciones.Length; i++)
-                        if (zona.Contains(Transformar(posiciones[i]))) tapadas++;
+                        if (zona.Contains(Pantalla(i))) tapadas++;
                     if (tapadas < menor) { menor = tapadas; r = esquinas[k]; }
                 }
                 g.FillRectangle(fondo, r);

@@ -41,7 +41,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             fila.Controls.Add(dZonas, 2, 0);
             fila.Controls.Add(dTrie, 3, 0);
 
-            TarjetaPanel tarjeta = new TarjetaPanel("Mapa esquemático (según latitud y longitud)");
+            TarjetaPanel tarjeta = new TarjetaPanel("Mapa de la ciudad");
             tarjeta.Contenido.Padding = new Padding(0);
 
             chkTiempos = new CheckBox();
@@ -62,6 +62,16 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             chkZonas.Margin = new Padding(0, 4, 0, 0);
             chkZonas.CheckedChanged += delegate { mapa.ColorearZonas = chkZonas.Checked; mapa.Invalidate(); };
 
+            CheckBox chkReal = new CheckBox();
+            chkReal.Text = "Mapa real";
+            chkReal.Checked = true;
+            chkReal.AutoSize = true;
+            chkReal.Font = Tema.Fuente(9f);
+            chkReal.ForeColor = Tema.TextoSuave;
+            chkReal.Margin = new Padding(0, 4, 16, 0);
+            chkReal.CheckedChanged += delegate { mapa.MapaReal = chkReal.Checked; mapa.AjustarVista(); };
+
+            tarjeta.Acciones.Controls.Add(chkReal);
             tarjeta.Acciones.Controls.Add(chkTiempos);
             tarjeta.Acciones.Controls.Add(chkZonas);
 

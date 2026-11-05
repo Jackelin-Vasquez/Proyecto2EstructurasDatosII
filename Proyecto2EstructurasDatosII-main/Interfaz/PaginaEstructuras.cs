@@ -33,6 +33,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         // Grafo
         private Label grafoResumen;
         private ListBox grafoLista;
+        private GrafoDibujo grafoDibujo;
 
         public PaginaEstructuras(Contexto ctx)
             : base(ctx, "Estructuras de datos", "Contenido interno de cada estructura propia y pruebas de sus operaciones.")
@@ -409,14 +410,36 @@ namespace Proyecto2EstructurasDatosII.Interfaz
             arriba.Controls.Add(resp);
             arriba.Controls.Add(grafoResumen);
 
-            TarjetaPanel tarjeta = new TarjetaPanel("Lista de adyacencia (un vértice por línea)");
+            TarjetaPanel tarjeta = new TarjetaPanel("Dibujo del grafo");
             tarjeta.Contenido.Padding = new Padding(0);
+
+            grafoDibujo = new GrafoDibujo();
+            grafoDibujo.Dock = DockStyle.Fill;
+            grafoDibujo.Enlazar(Ctx.Red);
+
             grafoLista = new ListBox();
             Tema.EstilizarLista(grafoLista);
             grafoLista.Dock = DockStyle.Fill;
             grafoLista.Font = Tema.FuenteMono(9.5f);
             grafoLista.ItemHeight = 22;
+            grafoLista.Visible = false;
+
+            CheckBox chkLista = new CheckBox();
+            chkLista.Text = "Ver como lista de adyacencia";
+            chkLista.AutoSize = true;
+            chkLista.Font = Tema.Fuente(9f);
+            chkLista.ForeColor = Tema.TextoSuave;
+            chkLista.Margin = new Padding(0, 4, 0, 0);
+            chkLista.CheckedChanged += delegate
+            {
+                grafoLista.Visible = chkLista.Checked;
+                grafoDibujo.Visible = !chkLista.Checked;
+                tarjeta.Titulo = chkLista.Checked ? "Lista de adyacencia (un vértice por línea)" : "Dibujo del grafo";
+            };
+            tarjeta.Acciones.Controls.Add(chkLista);
+
             tarjeta.Contenido.Controls.Add(grafoLista);
+            tarjeta.Contenido.Controls.Add(grafoDibujo);
 
             t.Controls.Add(tarjeta);
             t.Controls.Add(arriba);
@@ -427,6 +450,7 @@ namespace Proyecto2EstructurasDatosII.Interfaz
         {
             Grafo g = Ctx.Red.Grafo;
             grafoResumen.Text = g.CantidadVertices + " vértices  ·  " + g.CantidadAristas + " aristas dirigidas";
+            grafoDibujo.Recargar();
             string[] lineas = g.DescribirAdyacencia();
             grafoLista.BeginUpdate();
             grafoLista.Items.Clear();
